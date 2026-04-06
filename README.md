@@ -72,6 +72,7 @@ ope/
 - Python 3.10+
 - Node.js 18+
 - OpenAI API key
+- BRAVE API KEY
 
 ### 1. Clone & Setup Backend
 
@@ -112,7 +113,8 @@ npm install
 ```bash
 cd backend
 # Set your API key
-export OPENAI_API_KEY=sk-your-key-here  # Linux/Mac
+export OPENAI_API_KEY=sk-your-key-here
+       BRAVE_API_KEY=.....  # Linux/Mac
 # set OPENAI_API_KEY=sk-your-key-here   # Windows (Command Prompt)
 
 # Run the API server

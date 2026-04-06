@@ -5,7 +5,10 @@ import requests
 from bs4 import BeautifulSoup
 
 from agent.core.tools import Tool
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+api_key=os.getenv("BRAVE_PI_KEY")
 
 class WebScraperTool(Tool):
     """Tool for scraping content from websites."""
@@ -57,13 +60,72 @@ class WebScraperTool(Tool):
             return {"url": url, "error": str(e), "status": "failed"}
 
 
+class BraveSearchTool(Tool):
+    """Tool for searching using Brave Search API."""
+
+    def __init__(self, api_key: str):
+        super().__init__(
+            name="brave_search",
+            description="Search the web using Brave Search API",
+        )
+        self.api_key = api_key
+
+    def execute(self, query: str, num_results: int = 5) -> list[dict[str, Any]]:
+        """Search using Brave Search API.
+        
+        Args:
+            query: Search query.
+            num_results: Number of results to return.
+            
+        Returns:
+            List of search results.
+        """
+        try:
+            url = "https://api.search.brave.com/res/v1/web/search"
+            headers = {
+                "Accept": "application/json",
+                "X-Subscription-Token": self.api_key,
+            }
+            params = {
+                "q": query,
+                "count": num_results,
+            }
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            results = []
+            for item in data.get("web", {}).get("results", []):
+                results.append({
+                    "title": item.get("title", "No title"),
+                    "link": item.get("url", ""),
+                    "snippet": item.get("description", "No description available"),
+                })
+
+            if not results:
+                return [{
+                    "title": "No results found",
+                    "snippet": f"No results found for '{query}'",
+                    "link": f"https://search.brave.com/search?q={quote_plus(query)}",
+                }]
+
+            return results
+        except Exception as e:
+            return [{
+                "error": str(e),
+                "title": "Search failed",
+                "snippet": f"Could not complete search for '{query}'. Check API key.",
+                "link": f"https://search.brave.com/search?q={quote_plus(query)}",
+            }]
+
+
 class GoogleSearchTool(Tool):
     """Tool for searching Google."""
 
     def __init__(self):
         super().__init__(
             name="google_search",
-            description="Search Google and return top results",
+            description="Search Google and return top results (backup)",
         )
 
     def execute(self, query: str, num_results: int = 5) -> list[dict[str, str]]:

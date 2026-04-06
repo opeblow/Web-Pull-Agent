@@ -11,18 +11,23 @@ from pydantic import BaseModel
 from agent.core.agent import Agent
 from agent.tools import (
     WebScraperTool,
+    BraveSearchTool,
     GoogleSearchTool,
     WikipediaTool,
     NewsTool,
     WeatherTool,
 )
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 
 AGENT_SYSTEM_PROMPT = """You are a research assistant that helps users find information.
 
 Your capabilities:
 - scrape_website: Extract content from any URL
-- google_search: Search Google for information
+- brave_search: Search the web using Brave Search API (preferred)
+- google_search: Search Google for information (backup)
 - wikipedia: Get Wikipedia articles
 - get_news: Get latest news headlines
 - get_weather: Get current weather for any city
@@ -59,6 +64,9 @@ def get_agent(session_id: str, api_key: str) -> Agent:
             max_history=100,
         )
         agent.register_tool(WebScraperTool())
+        brave_api_key = os.getenv("BRAVE_PI_KEY")
+        if brave_api_key:
+            agent.register_tool(BraveSearchTool(api_key=brave_api_key))
         agent.register_tool(GoogleSearchTool())
         agent.register_tool(WikipediaTool())
         agent.register_tool(NewsTool())
